@@ -1,12 +1,18 @@
 const express = require('express'); // Import Express
 const path = require('path'); // Import Path module
+const mustacheExpress = require('mustache-express');
+const JOBS = require('./jobs');
 
 const app = express(); // Create an Express application
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.set('views', `${__dirname}/pages`);
+app.set('view engine', 'mustache');
+app.engine('mustache', mustacheExpress());
+
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'pages', 'index.html')); // Correct path joining
+    res.render('index', { jobs: JOBS});
 });
 
 // Port configuration
