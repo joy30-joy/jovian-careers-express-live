@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -13,12 +14,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', `${__dirname}/pages`);
 app.set('view engine', 'mustache');
 app.engine('mustache', mustacheExpress());
+
 app.use(express.urlencoded({ extended: true }));
 
+// Home Route
 app.get('/', (req, res) => {
     res.render('index', { jobs: JOBS });
 });
 
+// Job Details Route
 app.get('/jobs/:id', (req, res) => {
     const id = req.params.id;
     const matchedJob = JOBS.find(job => job.id.toString() === id);
@@ -30,16 +34,18 @@ app.get('/jobs/:id', (req, res) => {
     res.render('job', { job: matchedJob });
 });
 
+// Nodemailer Transporter Configuration
 const transporter = nodemailer.createTransport({
     host: 'mail.gmx.com',
     port: 465,
     secure: true,
     auth: {
         user: process.env.EMAIL_ID,
-        pass: process.env.EMAIL_PASSWORD
+        pass: process.env.EMAIL_PASSWORD,
     }
 });
 
+// Job Application Submission Route
 app.post('/jobs/:id/apply', (req, res) => {
     const { name, email, phone, dob, coverletter } = req.body;
     const id = req.params.id;
@@ -64,13 +70,16 @@ app.post('/jobs/:id/apply', (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            res.status(500).send('Error sending email');
+            console.error('Error sending email:', error);
+            res.status(500).send('Error sending email. Check server logs for details.');
         } else {
+            console.log('Email sent:', info.response);
             res.status(200).render('applied');
         }
     });
 });
 
+// Server Initialization
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
